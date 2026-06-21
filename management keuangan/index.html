@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen Keuangan Pribadi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* === SKEMA WARNA & TIPOGRAFI === */
+      :root {
+        /* Warna elegan dan profesional */
+        --primary: #111827; /* Dark slate */
+        --accent: #0f766e; /* Tosca tua */
+        --accent-hover: #115e59;
+        --bg-body: #f3f4f6;
+        --bg-surface: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+        --income: #059669; /* Hijau elegan */
+        --expense: #dc2626; /* Merah elegan */
+        --radius: 8px;
+
+        /* Tipografi standar sistem: bersih, minimalis, dan high-end */
+        --font-clean:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-clean);
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* === 1. HALAMAN LOGIN === */
+      #login-screen {
+        position: fixed;
+        inset: 0; /* top, right, bottom, left = 0 */
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .login-card {
+        background: var(--bg-surface);
+        padding: 40px 32px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-card h2 {
+        text-align: center;
+        margin-bottom: 24px;
+        color: var(--primary);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .login-error {
+        background-color: #fef2f2;
+        color: var(--expense);
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        margin-bottom: 16px;
+        text-align: center;
+        border: 1px solid #fecaca;
+        display: none;
+      }
+
+      /* === 2. APLIKASI UTAMA === */
+      #app-screen {
+        display: none; /* Disembunyikan sebelum login */
+        padding-bottom: 40px;
+      }
+
+      /* Header Aplikasi */
+      header {
+        background-color: var(--bg-surface);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary);
+      }
+
+      .btn-logout {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-logout:hover {
+        color: var(--primary);
+        border-color: var(--text-muted);
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 0 16px;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+
+      /* Komponen Card Minimalis */
+      .card {
+        background: var(--bg-surface);
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Ringkasan Saldo */
+      .summary-panel {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .summary-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .summary-card h3 {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+      }
+
+      .summary-card p {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .text-income {
+        color: var(--income);
+      }
+      .text-expense {
+        color: var(--expense);
+      }
+
+      /* Form Input */
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-main);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 1rem;
+        background-color: #f9fafb;
+        transition:
+          border-color 0.2s,
+          background-color 0.2s;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--accent);
+        background-color: var(--bg-surface);
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 16px;
+      }
+
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: normal;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background-color 0.2s;
+      }
+
+      .btn-primary:hover {
+        background-color: #374151;
+      }
+
+      /* Daftar Transaksi & Grafik */
+      .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .chart-wrapper {
+        width: 100%;
+        max-width: 350px;
+        margin: 0 auto;
+      }
+
+      .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .list-header h2,
+      .card h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+      }
+
+      .transaction-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-surface);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        transition: box-shadow 0.2s;
+      }
+
+      .transaction-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .transaction-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .transaction-title {
+        font-weight: 500;
+        font-size: 1rem;
+      }
+
+      .transaction-meta {
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .transaction-category {
+        background-color: var(--bg-body);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      .transaction-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .amount-display {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .btn-delete {
+        background: transparent;
+        color: var(--text-muted);
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+      }
+
+      .btn-delete:hover {
+        background-color: #fef2f2;
+        color: var(--expense);
+      }
+
+      /* === RESPONSIVE DESIGN (Mobile First Approach) === */
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr; /* Stack layout on mobile */
+        }
+        .transaction-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .transaction-actions {
+          width: 100%;
+          justify-content: space-between;
+          border-top: 1px solid var(--border);
+          padding-top: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login-screen">
+      <div class="login-card">
+        <h2>Masuk</h2>
+        <div id="login-error" class="login-error">
+          Username atau Password salah.
+        </div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="form-control"
+              autocomplete="off"
+              required
+            />
+          </div>
+          <div class="form-group" style="margin-bottom: 24px">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="form-control"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="app-screen">
+      <header>
+        <h1>Keuangan</h1>
+        <button id="btn-logout" class="btn-logout">Logout</button>
+      </header>
+
+      <div class="container">
+        <div class="summary-panel">
+          <div class="card summary-card">
+            <h3>Total Saldo</h3>
+            <p id="total-balance">Rp 0,00</p>
+          </div>
+          <div class="card summary-card">
+            <h3>Pemasukan</h3>
+            <p id="total-income" class="text-income">Rp 0,00</p>
+          </div>
+          <div class="card summary-card">
+            <h3>Pengeluaran</h3>
+            <p id="total-expense" class="text-expense">Rp 0,00</p>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card">
+            <h2 style="margin-bottom: 20px">Tambah Catatan</h2>
+            <form id="transaction-form">
+              <div class="form-group">
+                <label>Jenis</label>
+                <div class="radio-group">
+                  <label
+                    ><input type="radio" name="type" value="income" checked />
+                    Pemasukan</label
+                  >
+                  <label
+                    ><input type="radio" name="type" value="expense" />
+                    Pengeluaran</label
+                  >
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="category">Kategori</label>
+                <select id="category" class="form-control" required>
+                  <option value="Makanan">Makanan</option>
+                  <option value="Transportasi">Transportasi</option>
+                  <option value="Tagihan">Tagihan</option>
+                  <option value="Hiburan">Hiburan</option>
+                  <option value="Kesehatan">Kesehatan</option>
+                  <option value="Pendidikan">Pendidikan</option>
+                  <option value="Gaji">Gaji</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="description">Deskripsi</label>
+                <input
+                  type="text"
+                  id="description"
+                  class="form-control"
+                  placeholder="Cth: Beli kopi"
+                  required
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label for="amount">Nominal (Rp)</label>
+                <input
+                  type="number"
+                  id="amount"
+                  class="form-control"
+                  placeholder="0"
+                  min="1"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="date">Tanggal</label>
+                <input type="date" id="date" class="form-control" required />
+              </div>
+              <button type="submit" class="btn-primary">
+                Simpan Transaksi
+              </button>
+            </form>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <div class="card">
+            <h2 style="text-align: center; margin-bottom: 20px">
+              Distribusi Pengeluaran
+            </h2>
+            <div class="chart-wrapper">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </div>
+
+          <div>
+            <div class="list-header">
+              <h2>Riwayat</h2>
+              <select
+                id="filter"
+                class="form-control"
+                style="width: auto; padding: 8px 12px"
+              >
+                <option value="all">Semua</option>
+                <option value="income">Pemasukan</option>
+                <option value="expense">Pengeluaran</option>
+              </select>
+            </div>
+            <ul id="transaction-list" class="transaction-list"></ul>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      /* =========================================================
+        PERINGATAN: Ini hanya simulasi front-end. Kredensial login
+        ditulis langsung (hardcode). Jangan gunakan pola ini 
+        untuk aplikasi production dengan data sungguhan!
+        =========================================================
+        Untuk mengubah akses, ganti nilai variabel di bawah ini:
+        */
+      const DEFAULT_USER = "admin";
+      const DEFAULT_PASS = "admin123";
+
+      // --- 1. SISTEM LOGIN ---
+      const loginScreen = document.getElementById("login-screen");
+      const appScreen = document.getElementById("app-screen");
+      const loginError = document.getElementById("login-error");
+
+      // Cek status sesi saat halaman direfresh
+      if (sessionStorage.getItem("isLoggedIn") === "true") {
+        tampilkanAplikasi();
+      }
+
+      // Handle form login
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const user = document.getElementById("username").value;
+          const pass = document.getElementById("password").value;
+
+          if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
+            sessionStorage.setItem("isLoggedIn", "true");
+            tampilkanAplikasi();
+          } else {
+            loginError.style.display = "block";
+          }
+        });
+
+      // Handle logout
+      document
+        .getElementById("btn-logout")
+        .addEventListener("click", function () {
+          sessionStorage.removeItem("isLoggedIn");
+          loginScreen.style.display = "flex";
+          appScreen.style.display = "none";
+          document.getElementById("login-form").reset();
+          loginError.style.display = "none";
+        });
+
+      function tampilkanAplikasi() {
+        loginScreen.style.display = "none";
+        appScreen.style.display = "block";
+        inisialisasiAplikasi();
+      }
+
+      // --- 2. LOGIKA MANAJEMEN KEUANGAN ---
+      let dataTransaksi = [];
+      let grafikPengeluaran = null;
+
+      function inisialisasiAplikasi() {
+        // Ambil data dari localStorage
+        const dataLokal = localStorage.getItem("keuangan_db");
+        dataTransaksi = dataLokal ? JSON.parse(dataLokal) : [];
+
+        // Set tanggal form ke hari ini
+        document.getElementById("date").valueAsDate = new Date();
+
+        renderTampilan();
+      }
+
+      // Format angka ke Rupiah
+      function formatRupiah(angka) {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 2,
+        }).format(angka);
+      }
+
+      // Tambah transaksi baru
+      document
+        .getElementById("transaction-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const transaksiBaru = {
+            id: Date.now(),
+            type: document.querySelector('input[name="type"]:checked').value,
+            category: document.getElementById("category").value,
+            description: document.getElementById("description").value,
+            amount: parseFloat(document.getElementById("amount").value),
+            date: document.getElementById("date").value,
+          };
+
+          dataTransaksi.push(transaksiBaru);
+          simpanKeLokal();
+
+          // Reset input (kecuali tanggal dan jenis)
+          document.getElementById("description").value = "";
+          document.getElementById("amount").value = "";
+
+          renderTampilan();
+        });
+
+      // Hapus data
+      function hapusTransaksi(id) {
+        dataTransaksi = dataTransaksi.filter((t) => t.id !== id);
+        simpanKeLokal();
+        renderTampilan();
+      }
+
+      function simpanKeLokal() {
+        localStorage.setItem("keuangan_db", JSON.stringify(dataTransaksi));
+      }
+
+      // Event filter
+      document
+        .getElementById("filter")
+        .addEventListener("change", renderTampilan);
+
+      // --- 3. RENDER UI & GRAFIK ---
+      function renderTampilan() {
+        const filterValue = document.getElementById("filter").value;
+        const listEl = document.getElementById("transaction-list");
+
+        // Filter dan Urutkan (Terbaru ke terlama)
+        let dataTampil = dataTransaksi.filter(
+          (t) => filterValue === "all" || t.type === filterValue,
+        );
+        dataTampil.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Render List
+        listEl.innerHTML = "";
+        if (dataTampil.length === 0) {
+          listEl.innerHTML =
+            '<li style="text-align:center; padding: 24px; color: var(--text-muted);">Belum ada data transaksi.</li>';
+        } else {
+          dataTampil.forEach((t) => {
+            const isIncome = t.type === "income";
+            const sign = isIncome ? "+" : "-";
+            const colorClass = isIncome ? "text-income" : "text-expense";
+
+            // Format tanggal (misal: 15 Agu 2026)
+            const tgl = new Date(t.date).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+
+            // Icon SVG sederhana untuk tombol hapus
+            const iconHapus = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+
+            listEl.innerHTML += `
+                        <li class="transaction-item" style="border-left: 4px solid ${isIncome ? "var(--income)" : "var(--expense)"}">
+                            <div class="transaction-info">
+                                <span class="transaction-title">${t.description}</span>
+                                <div class="transaction-meta">
+                                    <span>${tgl}</span>
+                                    <span class="transaction-category">${t.category}</span>
+                                </div>
+                            </div>
+                            <div class="transaction-actions">
+                                <span class="amount-display ${colorClass}">${sign} ${formatRupiah(t.amount)}</span>
+                                <button class="btn-delete" title="Hapus" onclick="hapusTransaksi(${t.id})">
+                                    ${iconHapus}
+                                </button>
+                            </div>
+                        </li>
+                    `;
+          });
+        }
+
+        // Hitung & Render Ringkasan
+        const totalMasuk = dataTransaksi
+          .filter((t) => t.type === "income")
+          .reduce((sum, t) => sum + t.amount, 0);
+        const totalKeluar = dataTransaksi
+          .filter((t) => t.type === "expense")
+          .reduce((sum, t) => sum + t.amount, 0);
+        const saldo = totalMasuk - totalKeluar;
+
+        document.getElementById("total-income").innerText =
+          formatRupiah(totalMasuk);
+        document.getElementById("total-expense").innerText =
+          formatRupiah(totalKeluar);
+        document.getElementById("total-balance").innerText =
+          formatRupiah(saldo);
+
+        renderGrafik();
+      }
+
+      // Render Grafik Lingkaran dengan Chart.js
+      function renderGrafik() {
+        const ctx = document.getElementById("expenseChart").getContext("2d");
+        const dataPengeluaran = dataTransaksi.filter(
+          (t) => t.type === "expense",
+        );
+
+        // Kelompokkan total pengeluaran per kategori
+        const kategoriData = dataPengeluaran.reduce((acc, t) => {
+          acc[t.category] = (acc[t.category] || 0) + t.amount;
+          return acc;
+        }, {});
+
+        const labelKategori = Object.keys(kategoriData);
+        const nilaiKategori = Object.values(kategoriData);
+
+        if (grafikPengeluaran) {
+          grafikPengeluaran.destroy(); // Hapus instance lama agar tidak tumpang tindih
+        }
+
+        // Jika tidak ada data pengeluaran, batalkan render grafik
+        if (labelKategori.length === 0) return;
+
+        grafikPengeluaran = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: labelKategori,
+            datasets: [
+              {
+                data: nilaiKategori,
+                // Palet warna yang bersih dan modern
+                backgroundColor: [
+                  "#0f766e",
+                  "#1e3a8a",
+                  "#b45309",
+                  "#be123c",
+                  "#4338ca",
+                  "#374151",
+                  "#059669",
+                ],
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            cutout: "65%", // Membuat tampilan donat lebih tipis dan elegan
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  font: { family: "system-ui, sans-serif" },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.label || "";
+                    if (label) label += ": ";
+                    if (context.parsed !== null) {
+                      label += formatRupiah(context.parsed);
+                    }
+                    return label;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
